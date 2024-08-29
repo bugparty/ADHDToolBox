@@ -61,7 +61,7 @@ jobs:
 
     - name: Archive binary
       if: matrix.os == 'windows-2019'
-      run: 7z a analogclock-windows.zip build\release
+      run: 7z a analogclock-windows.zip build\release\analogclock.exe
       shell: cmd
 
     - name: Archive binary
