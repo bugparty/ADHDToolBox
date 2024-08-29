@@ -49,9 +49,9 @@ jobs:
         mkdir build
         cd build
         qmake ../analogclock/analogclock.pro
-        make -j$(nproc) || nproc
-        ls -l
-        ls -l release
+        nmake
+        dir
+        dir release
       shell: bash
 
     - name: Archive binary
