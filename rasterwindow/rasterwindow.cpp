@@ -51,7 +51,10 @@
 #include "rasterwindow.h"
 #include <QMenu>
 #include <QApplication>
+#ifdef _WIN32
 #include <Windows.h>
+#elif __linux__
+#endif
 //! [1]
 RasterWindow::RasterWindow(QWindow *parent)
     : QWindow(parent)
@@ -168,6 +171,7 @@ void RasterWindow::showContextMenu(const QPoint &position)   {
 }
 
 void RasterWindow::bringToForeground() {
+    #ifdef _WIN32
     HWND hCurWnd = ::GetForegroundWindow();
     DWORD dwMyID = ::GetCurrentThreadId();
     DWORD dwCurID = ::GetWindowThreadProcessId(hCurWnd, NULL);
@@ -188,4 +192,9 @@ void RasterWindow::bringToForeground() {
 
     // Detach the thread input
     ::AttachThreadInput(dwCurID, dwMyID, FALSE);
+#else
+    requestActivate();
+    raise();
+    setVisible(true);
+#endif
 }
