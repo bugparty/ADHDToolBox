@@ -35,6 +35,7 @@ jobs:
       run:  mkdir ${{ runner.temp }}\build
 
     - name: Build Project
+      if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
       run: |
         mkdir build
         cd build
