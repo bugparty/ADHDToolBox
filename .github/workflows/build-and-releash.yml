@@ -1,0 +1,93 @@
+name: Build and Release Qt6 Project
+
+on:
+  push:
+    branches:
+      - master
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Qt on Linux
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y qt6-base-dev qt6-tools-dev qt6-tools-dev-tools qt6-tools-designer
+
+    - name: Set up Qt on Windows
+      if: matrix.os == 'windows-latest'
+      run: |
+        choco install qt --version=6.0.0
+
+    - name: Set up Qt on macOS
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew install qt@6
+
+    - name: Build Project
+      run: |
+        cd analogclock
+        qmake analogclock.pro
+        make -j$(nproc) || nproc
+      shell: bash
+
+    - name: Archive binary
+      if: matrix.os == 'ubuntu-latest'
+      run: zip -j analogclock-linux.zip analogclock/analogclock
+      shell: bash
+
+    - name: Archive binary
+      if: matrix.os == 'windows-latest'
+      run: 7z a analogclock-windows.zip analogclock\analogclock.exe
+      shell: cmd
+
+    - name: Archive binary
+      if: matrix.os == 'macos-latest'
+      run: zip -j analogclock-macos.zip analogclock/analogclock
+      shell: bash
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.os }}-analogclock
+        path: |
+          analogclock-linux.zip
+          analogclock-windows.zip
+          analogclock-macos.zip
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Download Artifacts
+      uses: actions/download-artifact@v3
+      with:
+        path: ./artifacts
+
+    - name: Create Release
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: |
+          ./artifacts/analogclock-linux.zip
+          ./artifacts/analogclock-windows.zip
+          ./artifacts/analogclock-macos.zip
+        token: ${{ secrets.GITHUB_TOKEN }}
+        tag: ${{ github.ref_name }}
+        name: Release ${{ github.ref_name }}
+        body: |
+          Binaries for Linux, Windows, and macOS are included.
+        draft: false
+        prerelease: false
