@@ -90,10 +90,16 @@ jobs:
       with:
         path: ./artifacts
 
+    - name: Debug
+      run: ls /home/runner/work/ADHDToolBox/ADHDToolBox/artifacts/
+
     - name: Create Release
       uses: ncipollo/release-action@v1
       with:
         artifacts: |
+          ./artifacts/macos-latest-analogclock
+          ./artifacts/ubuntu-latest-analogclock
+          ./artifacts/windows-2019-analogclock
           ./artifacts/analogclock-linux.zip
           ./artifacts/analogclock-windows.zip
           ./artifacts/analogclock-macos.zip
