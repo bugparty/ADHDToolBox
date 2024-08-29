@@ -173,6 +173,8 @@ void AnalogClockWindow::render(QPainter *p)
 int main(int argc, char **argv)
 {
     QApplication app(argc, argv);
+    QCoreApplication::setOrganizationName("BowmanSoft");
+    QCoreApplication::setApplicationName("ADHDToolBox");
     AnalogClockWindow clock;
     // 检查是否支持系统托盘
     if (!QSystemTrayIcon::isSystemTrayAvailable()) {

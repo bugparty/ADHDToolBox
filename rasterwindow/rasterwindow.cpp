@@ -60,7 +60,13 @@ RasterWindow::RasterWindow(QWindow *parent)
     : QWindow(parent)
     , m_backingStore(new QBackingStore(this))
 {
-    setGeometry(100, 100, 300, 200);
+    auto previous_windows_position = settings.value(WINDOW_POSITION_KEY, QPoint(100,100)).toPoint();
+    m_alwaysOnTop =  settings.value(BRING_WINDOW_TO_TOP_KEY, false).toBool();
+    if(m_alwaysOnTop){
+        setAlwaysOnTop(m_alwaysOnTop);
+    }
+    setGeometry(previous_windows_position.x(), previous_windows_position.y() , 300, 200);
+
 }
 //! [1]
 
@@ -131,6 +137,8 @@ void RasterWindow::render(QPainter *painter)
 void RasterWindow::mousePressEvent(QMouseEvent *event)  {
     if (event->button() == Qt::LeftButton) {
         m_dragging = true;
+        //event->globalPosition() Retrieves the global position of the cursor (in screen coordinates) at the time of the event
+        //position(): Returns the current position of the window (the top-left corner in global screen coordinates).
         m_dragPosition = event->globalPosition().toPoint() - position();
     }else if (event->button() == Qt::RightButton){
         m_dragging = false;
@@ -148,22 +156,29 @@ void RasterWindow::mouseMoveEvent(QMouseEvent *event)  {
 void RasterWindow::mouseReleaseEvent(QMouseEvent *event)  {
     if (event->button() == Qt::LeftButton) {
         m_dragging = false;
+        //best time to save the position
+        settings.setValue(WINDOW_POSITION_KEY, position());
     }
 }
+void RasterWindow::setAlwaysOnTop(bool onTop){
+    if(onTop){
+        this->setFlags(this->flags() | Qt::WindowStaysOnTopHint);
 
+    }else{
+        this->setFlags(this->flags() ^ Qt::WindowStaysOnTopHint);
+    }
+}
 void RasterWindow::showContextMenu(const QPoint &position)   {
     QMenu menu;
-    menu.addAction("stay on top", [this](){
+    auto* stay_on_top = menu.addAction("stay on top", [this](){
         qDebug() << "clicked on top";
-
-        if(!m_alwaysOnTop){
-            this->setFlags(this->flags() | Qt::WindowStaysOnTopHint);
-
-        }else{
-            this->setFlags(this->flags() ^ Qt::WindowStaysOnTopHint);
-        }
         m_alwaysOnTop =!m_alwaysOnTop;
+        setAlwaysOnTop(m_alwaysOnTop);
+        QSettings settings;
+        settings.setValue(BRING_WINDOW_TO_TOP_KEY, m_alwaysOnTop);
     });
+    stay_on_top->setCheckable(true);
+    stay_on_top->setChecked(m_alwaysOnTop);
     menu.addAction("quit", [this](){
         this->destroy();
         QApplication::quit(); });

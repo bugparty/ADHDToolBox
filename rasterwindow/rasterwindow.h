@@ -53,7 +53,9 @@
 
 //! [1]
 #include <QtGui>
-
+constexpr auto WINDOW_SIZE_KEY = "window/size";
+constexpr auto WINDOW_POSITION_KEY = "window/position";
+constexpr auto BRING_WINDOW_TO_TOP_KEY = "window/isBringWindowToTop";
 class RasterWindow : public QWindow
 {
     Q_OBJECT
@@ -76,10 +78,12 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event) override;
     void showContextMenu(const QPoint &position);
 private:
+    void setAlwaysOnTop(bool onTop);
     QBackingStore *m_backingStore;
     bool m_dragging = false;
     bool m_alwaysOnTop = false;
     QPoint m_dragPosition;
+    QSettings settings;
 };
 //! [1]
 #endif // RASTERWINDOW_H
