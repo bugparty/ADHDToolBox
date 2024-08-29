@@ -55,7 +55,7 @@ jobs:
 
     - name: Archive binary
       if: matrix.os == 'ubuntu-latest'
-      run: zip -j analogclock-linux.zip build/analogclock
+      run: zip -j -r analogclock-linux.zip build/analogclock
       shell: bash
 
     - name: Archive binary
@@ -65,7 +65,7 @@ jobs:
 
     - name: Archive binary
       if: matrix.os == 'macos-latest'
-      run: zip -j analogclock-macos.zip build/analogclock.app
+      run: zip -j -r analogclock-macos.zip build/analogclock.app
       shell: bash
 
     - name: Upload Artifact
