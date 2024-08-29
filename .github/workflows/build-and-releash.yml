@@ -73,7 +73,9 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: ${{ matrix.os }}-analogclock
-        path:  build\release\analogclock.exe
+        path:  |
+          build\release\analogclock.exe
+          build\release\*.dll
 
 
     - name: Upload Artifact
@@ -103,15 +105,17 @@ jobs:
         zip -j -r analogclock-linux.zip ./artifacts/ubuntu-latest-analogclock
         zip -j -r analogclock-macos.zip ./artifacts/macos-latest-analogclock
         zip -j -r analogclock-windows.zip  ./artifacts/windows-2019-analogclock
+        pwd
+        ls -l
       shell: bash
 
     - name: Create Release
       uses: ncipollo/release-action@v1
       with:
         artifacts: |
-          ./artifacts/analogclock-linux.zip
-          ./artifacts/analogclock-windows.zip
-          ./artifacts/analogclock-macos.zip
+          ./analogclock-linux.zip
+          ./analogclock-windows.zip
+          ./analogclock-macos.zip
         token: ${{ secrets.GITHUB_TOKEN }}
         tag: ${{ github.ref_name }}
         name: Release ${{ github.ref_name }} - ${{ github.sha }}
