@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/images">
+        <file alias="tray_icon">resources/images/360_troll.jpg</file>
+        <file alias="bring_to_top">resources/images/bring_to_top.jpg</file>
+        <file alias="exit">resources/images/exit.png</file>
+    </qresource>
+</RCC>
