@@ -52,7 +52,7 @@ jobs:
         nmake
         dir
         dir release
-      shell: bash
+      shell: cmd
 
     - name: Archive binary
       if: matrix.os == 'ubuntu-latest'
