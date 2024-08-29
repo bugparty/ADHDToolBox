@@ -42,6 +42,16 @@ jobs:
         make -j$(nproc) || nproc
         ls -l
       shell: bash
+    - name: Build Project
+      if: matrix.os == 'windows-2019'
+      run: |
+        mkdir build
+        cd build
+        qmake ../analogclock/analogclock.pro
+        make -j$(nproc) || nproc
+        ls -l
+        ls -l release
+      shell: bash
 
     - name: Archive binary
       if: matrix.os == 'ubuntu-latest'
@@ -49,8 +59,8 @@ jobs:
       shell: bash
 
     - name: Archive binary
-      if: matrix.os == 'windows-latest'
-      run: 7z a analogclock-windows.zip build\analogclock.exe
+      if: matrix.os == 'windows-2019'
+      run: 7z a analogclock-windows.zip build\release
       shell: cmd
 
     - name: Archive binary
