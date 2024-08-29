@@ -61,29 +61,28 @@ jobs:
 
       shell: cmd
 
-    - name: Archive binary
-      if: matrix.os == 'ubuntu-latest'
-      run: zip -j -r analogclock-linux.zip build/analogclock
-      shell: bash
-
-    - name: Archive binary
-      if: matrix.os == 'windows-2019'
-      run: 7z a analogclock-windows.zip build\release\analogclock.exe
-      shell: cmd
-
-    - name: Archive binary
-      if: matrix.os == 'macos-latest'
-      run: zip -j -r analogclock-macos.zip build/analogclock.app
-      shell: bash
-
     - name: Upload Artifact
+      if: matrix.os == 'ubuntu-latest'
       uses: actions/upload-artifact@v3
       with:
         name: ${{ matrix.os }}-analogclock
-        path: |
-          analogclock-linux.zip
-          analogclock-windows.zip
-          analogclock-macos.zip
+        path:  build/analogclock
+
+    - name: Upload Artifact
+      if: matrix.os == 'windows-2019'
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.os }}-analogclock
+        path:  build\release\analogclock.exe
+
+
+    - name: Upload Artifact
+      if: matrix.os == 'macos-latest'
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.os }}-analogclock
+        path:  build/analogclock.app
+
 
   release:
     needs: build
@@ -99,20 +98,23 @@ jobs:
 
     - name: Debug
       run: ls /home/runner/work/ADHDToolBox/ADHDToolBox/artifacts/
+    - name: Archive binary
+      run: |
+        zip -j -r analogclock-linux.zip ./artifacts/ubuntu-latest-analogclock
+        zip -j -r analogclock-macos.zip ./artifacts/macos-latest-analogclock
+        zip -j -r analogclock-windows.zip  ./artifacts/windows-2019-analogclock
+      shell: bash
 
     - name: Create Release
       uses: ncipollo/release-action@v1
       with:
         artifacts: |
-          ./artifacts/macos-latest-analogclock
-          ./artifacts/ubuntu-latest-analogclock
-          ./artifacts/windows-2019-analogclock
           ./artifacts/analogclock-linux.zip
           ./artifacts/analogclock-windows.zip
           ./artifacts/analogclock-macos.zip
         token: ${{ secrets.GITHUB_TOKEN }}
         tag: ${{ github.ref_name }}
-        name: Release ${{ github.ref_name }}
+        name: Release ${{ github.ref_name }} - ${{ github.sha }}
         body: |
           Binaries for Linux, Windows, and macOS are included.
         draft: false
