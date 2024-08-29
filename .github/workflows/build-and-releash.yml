@@ -35,23 +35,25 @@ jobs:
 
     - name: Build Project
       run: |
-        qmake ${{ env.SOURCE_DIR }}\analogclock\analogclock.pro
+        mkdir build
+        cd build
+        qmake ../analogclock/analogclock.pro
         make -j$(nproc) || nproc
       shell: bash
 
     - name: Archive binary
       if: matrix.os == 'ubuntu-latest'
-      run: zip -j analogclock-linux.zip analogclock/analogclock
+      run: zip -j analogclock-linux.zip build/analogclock
       shell: bash
 
     - name: Archive binary
       if: matrix.os == 'windows-latest'
-      run: 7z a analogclock-windows.zip analogclock\analogclock.exe
+      run: 7z a analogclock-windows.zip build\analogclock.exe
       shell: cmd
 
     - name: Archive binary
       if: matrix.os == 'macos-latest'
-      run: zip -j analogclock-macos.zip analogclock/analogclock
+      run: zip -j analogclock-macos.zip build/analogclock
       shell: bash
 
     - name: Upload Artifact
