@@ -40,6 +40,7 @@ jobs:
         cd build
         qmake ../analogclock/analogclock.pro
         make -j$(nproc) || nproc
+        ls -l
       shell: bash
 
     - name: Archive binary
