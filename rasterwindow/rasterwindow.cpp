@@ -62,9 +62,7 @@ RasterWindow::RasterWindow(QWindow *parent)
 {
     auto previous_windows_position = settings.value(WINDOW_POSITION_KEY, QPoint(100,100)).toPoint();
     m_alwaysOnTop =  settings.value(BRING_WINDOW_TO_TOP_KEY, false).toBool();
-    if(m_alwaysOnTop){
-        setAlwaysOnTop(m_alwaysOnTop);
-    }
+
     setGeometry(previous_windows_position.x(), previous_windows_position.y() , 300, 200);
 
 }
@@ -100,8 +98,12 @@ void RasterWindow::resizeEvent(QResizeEvent *resizeEvent)
 //! [2]
 void RasterWindow::exposeEvent(QExposeEvent *)
 {
-    if (isExposed())
+    if (isExposed()){
+        if(m_alwaysOnTop){
+            setAlwaysOnTop(m_alwaysOnTop);
+        }
         renderNow();
+    }
 }
 //! [2]
 
@@ -160,9 +162,11 @@ void RasterWindow::mouseReleaseEvent(QMouseEvent *event)  {
         settings.setValue(WINDOW_POSITION_KEY, position());
     }
 }
+
 void RasterWindow::setAlwaysOnTop(bool onTop){
     if(onTop){
         this->setFlags(this->flags() | Qt::WindowStaysOnTopHint);
+        raise();
 
     }else{
         this->setFlags(this->flags() ^ Qt::WindowStaysOnTopHint);
