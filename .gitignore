@@ -6,3 +6,4 @@ analogclock/moc_rasterwindow.cpp
 analogclock/qrc_resources.cpp
 analogclock/moc_predefs.h
 analogclock/.qmake.stash
+build

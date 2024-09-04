@@ -120,7 +120,9 @@ void RasterWindow::renderNow()
     QPaintDevice *device = m_backingStore->paintDevice();
     QPainter painter(device);
 
-    painter.fillRect(0, 0, width(), height(), QGradient::NightFade);
+    //painter.fillRect(0, 0, width(), height(), QGradient::NightFade);
+    QColor transparentColor(255, 255, 255, 0);
+    painter.fillRect(0,0,width(),height(), transparentColor);
     render(&painter);
     painter.end();
 
@@ -132,7 +134,7 @@ void RasterWindow::renderNow()
 //! [4]
 void RasterWindow::render(QPainter *painter)
 {
-    painter->drawText(QRectF(0, 0, width(), height()), Qt::AlignCenter, QStringLiteral("QWindow"));
+    painter->drawText(QRectF(0, 0, width(), height()), Qt::AlignCenter, QStringLiteral("raster window"));
 }
 
 

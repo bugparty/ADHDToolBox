@@ -84,7 +84,7 @@ AnalogClockWindow::AnalogClockWindow()
     setTitle("Analog Clock");
     resize(200, 200);
 
-    m_timerId = startTimer(1000);
+    m_timerId = startTimer(500);
 }
 //! [6]
 
@@ -111,9 +111,17 @@ void AnalogClockWindow::render(QPainter *p)
         QPoint(-7, 8),
         QPoint(0, -70)
     };
+    static const QPoint secondHand[3] = {
+        QPoint(3, 8),
+        QPoint(-3, 8),
+        QPoint(0, -80)
+    };
+
 
     QColor hourColor(127, 0, 127);
-    QColor minuteColor(0, 127, 127, 191);
+    QColor minuteColor(0, 127, 127, 255);
+    QColor secondColor(64, 64, 64,255);
+    p->eraseRect(0,0,width(),height());
 //! [8]
 
 //! [9]
@@ -141,7 +149,7 @@ void AnalogClockWindow::render(QPainter *p)
 
 //! [12]
     p->setPen(hourColor);
-
+    //画hour的表盘刻度
     for (int i = 0; i < 12; ++i) {
         p->drawLine(88, 0, 96, 0);
         p->rotate(30.0);
@@ -167,6 +175,13 @@ void AnalogClockWindow::render(QPainter *p)
         p->rotate(6.0);
     }
 //! [4]
+//! //draw second hand
+    p->setPen(Qt::NoPen);
+    p->setBrush(secondColor);
+    p->save();
+    p->rotate(6.0 * time.second());
+    p->drawConvexPolygon(secondHand, 3);
+    p->restore();
 }
 
 
