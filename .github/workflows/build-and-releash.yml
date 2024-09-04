@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - ci
   release:
     types: [created]
 
@@ -34,34 +35,56 @@ jobs:
       run:  mkdir ${{ runner.temp }}\build
 
     - name: Build Project
+      if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
       run: |
-        qmake ${{ env.SOURCE_DIR }}\analogclock\analogclock.pro
+        mkdir build
+        cd build
+        qmake ../analogclock/analogclock.pro
         make -j$(nproc) || nproc
+        ls -l
       shell: bash
+    - name: Build Project
+      if: matrix.os == 'windows-2019'
+      run: |
+        mkdir build
+        cd build
+        qmake ../analogclock/analogclock.pro
+        nmake
+        dir
+        cd release
+        windeployqt --qmldir ${{ env.SOURCE_DIR }} analogclock.exe --pdb --release --compiler-runtime
+        copy C:\Windows\System32\concrt140.dll .
+        copy C:\Windows\System32\vccorlib140.dll .
+        copy C:\Windows\System32\msvcp140.dll .
+        copy C:\Windows\System32\vcruntime140.dll .
+        dir
 
-    - name: Archive binary
-      if: matrix.os == 'ubuntu-latest'
-      run: zip -j analogclock-linux.zip analogclock/analogclock
-      shell: bash
-
-    - name: Archive binary
-      if: matrix.os == 'windows-latest'
-      run: 7z a analogclock-windows.zip analogclock\analogclock.exe
       shell: cmd
 
-    - name: Archive binary
-      if: matrix.os == 'macos-latest'
-      run: zip -j analogclock-macos.zip analogclock/analogclock
-      shell: bash
-
     - name: Upload Artifact
+      if: matrix.os == 'ubuntu-latest'
       uses: actions/upload-artifact@v3
       with:
         name: ${{ matrix.os }}-analogclock
-        path: |
-          analogclock-linux.zip
-          analogclock-windows.zip
-          analogclock-macos.zip
+        path:  build/analogclock
+
+    - name: Upload Artifact
+      if: matrix.os == 'windows-2019'
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.os }}-analogclock
+        path:  |
+          build\release\analogclock.exe
+          build\release\*.dll
+
+
+    - name: Upload Artifact
+      if: matrix.os == 'macos-latest'
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.os }}-analogclock
+        path:  build/analogclock.app
+
 
   release:
     needs: build
@@ -75,16 +98,27 @@ jobs:
       with:
         path: ./artifacts
 
+    - name: Debug
+      run: ls /home/runner/work/ADHDToolBox/ADHDToolBox/artifacts/
+    - name: Archive binary
+      run: |
+        zip -j -r analogclock-linux.zip ./artifacts/ubuntu-latest-analogclock
+        zip -j -r analogclock-macos.zip ./artifacts/macos-latest-analogclock
+        zip -j -r analogclock-windows.zip  ./artifacts/windows-2019-analogclock
+        pwd
+        ls -l
+      shell: bash
+
     - name: Create Release
       uses: ncipollo/release-action@v1
       with:
         artifacts: |
-          ./artifacts/analogclock-linux.zip
-          ./artifacts/analogclock-windows.zip
-          ./artifacts/analogclock-macos.zip
+          ./analogclock-linux.zip
+          ./analogclock-windows.zip
+          ./analogclock-macos.zip
         token: ${{ secrets.GITHUB_TOKEN }}
         tag: ${{ github.ref_name }}
-        name: Release ${{ github.ref_name }}
+        name: Release ${{ github.ref_name }} - ${{ github.sha }}
         body: |
           Binaries for Linux, Windows, and macOS are included.
         draft: false
