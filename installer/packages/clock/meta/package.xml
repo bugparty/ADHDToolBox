@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package>
+    <DisplayName>ADHD Clock</DisplayName>
+    <Description>This package contains the main application executable.</Description>
+    <Version>1.0.0</Version>
+    <ReleaseDate>2024-09-03</ReleaseDate>
+    <Default>true</Default>
+
+</Package>

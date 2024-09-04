@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Installer>
+    <Name>ADHD Clock</Name>
+    <Version>1.0.0</Version>
+    <Title>ADHD Clock Installer</Title>
+    <Publisher>BowmanSoft</Publisher>
+    <ProductUrl>http://www.tomatodo.com</ProductUrl>
+    <StartMenuDir>ADHD Clock</StartMenuDir>
+    <TargetDir>@HomeDir@/ADHD_Clock</TargetDir>
+</Installer>
