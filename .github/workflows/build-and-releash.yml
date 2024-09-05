@@ -30,6 +30,7 @@ jobs:
       uses: egor-tensin/vs-shell@v2
       with:
           arch: x64
+    
 
     - name: Create build directory
       run:  mkdir ${{ runner.temp }}\build
@@ -51,12 +52,14 @@ jobs:
         qmake ../analogclock/analogclock.pro
         nmake
         dir
-        cd release
-        windeployqt --qmldir ${{ env.SOURCE_DIR }} analogclock.exe --pdb --release --compiler-runtime
+        mkdir packaging
+        copy   release\analogclock.exe packaging\analogclock.exe 
+        windeployqt packaging/analogclock.exe
         copy C:\Windows\System32\concrt140.dll .
         copy C:\Windows\System32\vccorlib140.dll .
         copy C:\Windows\System32\msvcp140.dll .
         copy C:\Windows\System32\vcruntime140.dll .
+        misc\enigmavbconsole.exe misc\pack.evb
         dir
 
       shell: cmd

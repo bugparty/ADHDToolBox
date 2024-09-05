@@ -7,3 +7,4 @@ analogclock/qrc_resources.cpp
 analogclock/moc_predefs.h
 analogclock/.qmake.stash
 build
+installer/packages/clock/data/*

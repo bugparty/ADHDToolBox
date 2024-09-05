@@ -6,12 +6,12 @@ if not exist build (
 cd build
 
 qmake  CONFIG+=release CONFIG-=debug  ../AdhdToolBox.pro
-@REM jom /f Makefile
-nmake /f Makefile
+jom /f Makefile
+@REM nmake /f Makefile
 if not exist packaging (
     mkdir packaging
 )
- copy   .\analogclock\release\analogclock.exe .\packaging\analogclock.exe 
-windeployqt packaging/analogclock.exe
-cd  packaging
-mt.exe -manifest analogclock.exe.manifest -outputresource:analogclock.exe
+copy   .\analogclock\release\analogclock.exe  ..\installer\packages\clock\data\adhdclock.exe 
+windeployqt ..\installer\packages\clock\data\adhdclock.exe 
+
+@REM misc\enigmavbconsole.exe misc\pack.evb

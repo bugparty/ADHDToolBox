@@ -188,6 +188,7 @@ void AnalogClockWindow::render(QPainter *p)
 int main(int argc, char **argv)
 {
     QApplication app(argc, argv);
+    app.setWindowIcon(QIcon(":/images/logo.png"));  // 路径基于资源文件
     QCoreApplication::setOrganizationName("BowmanSoft");
     QCoreApplication::setApplicationName("ADHDToolBox");
     AnalogClockWindow clock;

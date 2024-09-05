@@ -7,8 +7,8 @@ SOURCES += \
     main.cpp \
     util.cpp
 QT += core gui widgets
-target.path = $$[QT_INSTALL_EXAMPLES]/gui/analogclock
-INSTALLS += target
+
+RC_FILE += win32.rc
 
 RESOURCES += \
     resources.qrc

@@ -3,5 +3,7 @@
         <file alias="tray_icon">resources/images/360_troll.jpg</file>
         <file alias="bring_to_top">resources/images/bring_to_top.jpg</file>
         <file alias="exit">resources/images/exit.png</file>
+        <file alias="logo.ico">resources/images/adhdLogo.ico</file>
+        <file alias="logo.png">resources/images/adhdLogo.png</file>
     </qresource>
 </RCC>
