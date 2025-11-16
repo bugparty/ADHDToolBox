@@ -5,8 +5,12 @@ on:
     branches:
       - master
       - ci
-  release:
-    types: [created]
+      - 'claude/**'
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - master
 
 jobs:
   build:
@@ -17,7 +21,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Install Qt
       uses: jurplel/install-qt-action@v4
@@ -25,88 +29,87 @@ jobs:
         version: '6.7.2'
         target: 'desktop'
         dir:  ${{ runner.temp }}
+
     - name: Set up Visual Studio shell
       if: matrix.os == 'windows-2019'
       uses: egor-tensin/vs-shell@v2
       with:
           arch: x64
 
-    - name: Create build directory
-      run:  mkdir ${{ runner.temp }}\build
-
-    - name: Build Project
+    - name: Build Project (Linux/macOS)
       if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
       run: |
         mkdir build
         cd build
-        qmake ../analogclock/analogclock.pro
-        make -j$(nproc) || nproc
+        qmake CONFIG+=release CONFIG-=debug ../analogclock/analogclock.pro
+        make -j$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
         ls -l
       shell: bash
-    - name: Build Project
+
+    - name: Build Project (Windows)
       if: matrix.os == 'windows-2019'
       run: |
         mkdir build
         cd build
-        qmake ../analogclock/analogclock.pro
+        qmake CONFIG+=release CONFIG-=debug ../analogclock/analogclock.pro
         nmake
         dir
         cd release
-        windeployqt --qmldir ${{ env.SOURCE_DIR }} analogclock.exe --pdb --release --compiler-runtime
-        copy C:\Windows\System32\concrt140.dll .
-        copy C:\Windows\System32\vccorlib140.dll .
-        copy C:\Windows\System32\msvcp140.dll .
-        copy C:\Windows\System32\vcruntime140.dll .
+        windeployqt --qmldir . analogclock.exe --release --compiler-runtime
+        copy C:\Windows\System32\concrt140.dll . 2>nul || echo "concrt140.dll not found"
+        copy C:\Windows\System32\vccorlib140.dll . 2>nul || echo "vccorlib140.dll not found"
+        copy C:\Windows\System32\msvcp140.dll . 2>nul || echo "msvcp140.dll not found"
+        copy C:\Windows\System32\vcruntime140.dll . 2>nul || echo "vcruntime140.dll not found"
         dir
-
       shell: cmd
 
-    - name: Upload Artifact
+    - name: Upload Artifact (Linux)
       if: matrix.os == 'ubuntu-latest'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.os }}-analogclock
         path:  build/analogclock
 
-    - name: Upload Artifact
+    - name: Upload Artifact (Windows)
       if: matrix.os == 'windows-2019'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.os }}-analogclock
         path:  |
-          build\release\analogclock.exe
-          build\release\*.dll
+          build/release/analogclock.exe
+          build/release/*.dll
 
-
-    - name: Upload Artifact
+    - name: Upload Artifact (macOS)
       if: matrix.os == 'macos-latest'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.os }}-analogclock
         path:  build/analogclock.app
 
-
   release:
     needs: build
     runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Download Artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         path: ./artifacts
 
-    - name: Debug
-      run: ls /home/runner/work/ADHDToolBox/ADHDToolBox/artifacts/
-    - name: Archive binary
+    - name: Debug - List artifacts
+      run: ls -R ./artifacts
+
+    - name: Archive binaries
       run: |
-        zip -j -r analogclock-linux.zip ./artifacts/ubuntu-latest-analogclock
-        zip -j -r analogclock-macos.zip ./artifacts/macos-latest-analogclock
-        zip -j -r analogclock-windows.zip  ./artifacts/windows-2019-analogclock
-        pwd
-        ls -l
+        cd artifacts
+        zip -r ../analogclock-linux.zip ubuntu-latest-analogclock
+        zip -r ../analogclock-macos.zip macos-latest-analogclock
+        zip -r ../analogclock-windows.zip windows-2019-analogclock
+        cd ..
+        ls -lh *.zip
       shell: bash
 
     - name: Create Release
@@ -118,8 +121,16 @@ jobs:
           ./analogclock-macos.zip
         token: ${{ secrets.GITHUB_TOKEN }}
         tag: ${{ github.ref_name }}
-        name: Release ${{ github.ref_name }} - ${{ github.sha }}
+        name: Release ${{ github.ref_name }}
         body: |
-          Binaries for Linux, Windows, and macOS are included.
+          ## ADHD ToolBox Release ${{ github.ref_name }}
+
+          ### Downloads
+          - **Linux**: analogclock-linux.zip
+          - **Windows**: analogclock-windows.zip
+          - **macOS**: analogclock-macos.zip
+
+          ### Changes
+          Built from commit ${{ github.sha }}
         draft: false
         prerelease: false
