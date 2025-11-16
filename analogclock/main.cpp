@@ -53,8 +53,11 @@
 #include <QMessageBox>
 #include <QSystemTrayIcon>
 #include <QMenu>
-#include <QScopedPointer>
+#include <QScreen>
 #include "rasterwindow.h"
+
+// Timer interval constant
+constexpr int TIMER_INTERVAL_MS = 500;
 
 
 //! [5]
@@ -84,7 +87,7 @@ AnalogClockWindow::AnalogClockWindow()
     setTitle("Analog Clock");
     resize(200, 200);
 
-    m_timerId = startTimer(500);
+    m_timerId = startTimer(TIMER_INTERVAL_MS);
 }
 //! [6]
 
@@ -149,7 +152,7 @@ void AnalogClockWindow::render(QPainter *p)
 
 //! [12]
     p->setPen(hourColor);
-    //画hour的表盘刻度
+    // Draw hour markers
     for (int i = 0; i < 12; ++i) {
         p->drawLine(88, 0, 96, 0);
         p->rotate(30.0);
@@ -191,32 +194,43 @@ int main(int argc, char **argv)
     QCoreApplication::setOrganizationName("BowmanSoft");
     QCoreApplication::setApplicationName("ADHDToolBox");
     AnalogClockWindow clock;
+
     // 检查是否支持系统托盘
     if (!QSystemTrayIcon::isSystemTrayAvailable()) {
-        QMessageBox::critical(nullptr, "错误", "系统托盘不可用！");
+        QMessageBox::critical(nullptr, "Error", "System tray is not available!");
         return 1;
     }
+
     // 创建一个托盘图标
     QSystemTrayIcon trayIcon;
-    // 设置托盘图标
-    trayIcon.setIcon(QIcon(":/images/tray_icon")); // 使用资源中的图标
-    app.setQuitOnLastWindowClosed(true);
-    // 创建菜单
-    QScopedPointer<QMenu> fileMenu(new QMenu("File"));
+
+    // 设置托盘图标，验证资源是否存在
+    QIcon trayIconImage(":/images/tray_icon");
+    if (trayIconImage.isNull()) {
+        qWarning() << "Failed to load tray icon from resources";
+        // 使用系统默认图标作为后备
+        trayIconImage = QIcon::fromTheme("application-x-executable");
+    }
+    trayIcon.setIcon(trayIconImage);
+
+    // 托盘应用不应该在窗口关闭时退出
+    app.setQuitOnLastWindowClosed(false);
+
+    // 创建菜单 (trayIcon 会在析构时自动删除菜单)
+    QMenu* trayMenu = new QMenu();
 
     // 创建动作并设置图标
-    fileMenu->addAction(QIcon(":/images/bring_to_top"), "bring to front", [&clock](){
-        qDebug() << "bring to top" ;
+    trayMenu->addAction(QIcon(":/images/bring_to_top"), "Bring to Front", [&clock](){
+        qDebug() << "Bringing window to foreground";
         clock.bringToForeground();
     });
-    fileMenu->addSeparator(); // 添加分隔符
-    fileMenu->addAction(QIcon(":/images/exit"), "Exit", [&clock, &app](){
-        qDebug() << "exit" ;
-        clock.destroy();
-        app.exit();
+    trayMenu->addSeparator();
+    trayMenu->addAction(QIcon(":/images/exit"), "Exit", [&app](){
+        qDebug() << "Exiting application";
+        app.quit();
     });
 
-    trayIcon.setContextMenu(fileMenu.get());
+    trayIcon.setContextMenu(trayMenu);
     trayIcon.show();
 
     clock.show();

@@ -51,20 +51,47 @@
 #include "rasterwindow.h"
 #include <QMenu>
 #include <QApplication>
+#include <QScreen>
 #ifdef _WIN32
 #include <Windows.h>
-#elif __linux__
 #endif
 //! [1]
 RasterWindow::RasterWindow(QWindow *parent)
     : QWindow(parent)
     , m_backingStore(new QBackingStore(this))
 {
-    auto previous_windows_position = settings.value(WINDOW_POSITION_KEY, QPoint(100,100)).toPoint();
-    m_alwaysOnTop =  settings.value(BRING_WINDOW_TO_TOP_KEY, false).toBool();
+    const int defaultWidth = 300;
+    const int defaultHeight = 200;
+    QPoint previous_windows_position = settings.value(WINDOW_POSITION_KEY, QPoint(100, 100)).toPoint();
+    m_alwaysOnTop = settings.value(BRING_WINDOW_TO_TOP_KEY, false).toBool();
 
-    setGeometry(previous_windows_position.x(), previous_windows_position.y() , 300, 200);
+    // Validate that the saved position is visible on at least one screen
+    bool positionValid = false;
+    QRect windowRect(previous_windows_position, QSize(defaultWidth, defaultHeight));
 
+    for (QScreen* screen : QGuiApplication::screens()) {
+        if (screen->geometry().intersects(windowRect)) {
+            positionValid = true;
+            break;
+        }
+    }
+
+    // If position is not valid, use default position on primary screen
+    if (!positionValid) {
+        qDebug() << "Saved window position is off-screen, using default position";
+        QScreen* primaryScreen = QGuiApplication::primaryScreen();
+        if (primaryScreen) {
+            QRect screenGeometry = primaryScreen->availableGeometry();
+            previous_windows_position = QPoint(
+                screenGeometry.x() + 100,
+                screenGeometry.y() + 100
+            );
+        } else {
+            previous_windows_position = QPoint(100, 100);
+        }
+    }
+
+    setGeometry(previous_windows_position.x(), previous_windows_position.y(), defaultWidth, defaultHeight);
 }
 //! [1]
 
@@ -160,7 +187,7 @@ void RasterWindow::mouseMoveEvent(QMouseEvent *event)  {
 void RasterWindow::mouseReleaseEvent(QMouseEvent *event)  {
     if (event->button() == Qt::LeftButton) {
         m_dragging = false;
-        //best time to save the position
+        // Save window position
         settings.setValue(WINDOW_POSITION_KEY, position());
     }
 }
@@ -169,25 +196,26 @@ void RasterWindow::setAlwaysOnTop(bool onTop){
     if(onTop){
         this->setFlags(this->flags() | Qt::WindowStaysOnTopHint);
         raise();
-
+        show();
     }else{
-        this->setFlags(this->flags() ^ Qt::WindowStaysOnTopHint);
+        this->setFlags(this->flags() & ~Qt::WindowStaysOnTopHint);
+        show();
     }
 }
 void RasterWindow::showContextMenu(const QPoint &position)   {
     QMenu menu;
-    auto* stay_on_top = menu.addAction("stay on top", [this](){
-        qDebug() << "clicked on top";
-        m_alwaysOnTop =!m_alwaysOnTop;
+    auto* stay_on_top = menu.addAction("Stay on Top", [this](){
+        qDebug() << "Toggled stay on top";
+        m_alwaysOnTop = !m_alwaysOnTop;
         setAlwaysOnTop(m_alwaysOnTop);
         QSettings settings;
         settings.setValue(BRING_WINDOW_TO_TOP_KEY, m_alwaysOnTop);
     });
     stay_on_top->setCheckable(true);
     stay_on_top->setChecked(m_alwaysOnTop);
-    menu.addAction("quit", [this](){
-        this->destroy();
-        QApplication::quit(); });
+    menu.addAction("Quit", [](){
+        QApplication::quit();
+    });
     menu.exec(position);
 }
 
